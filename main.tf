@@ -9,8 +9,8 @@ data "google_project" "project" {
 
 # Reference an existing Workload Identity Pool (created in launch.sh if missing)
 data "google_iam_workload_identity_pool" "vendor_pool" {
-  name    = "projects/${var.project_id}/locations/global/workloadIdentityPools/vendor-pool"
-  project = var.project_id
+  project                    = var.project_id
+  workload_identity_pool_id = "vendor-pool"
 }
 
 locals {
@@ -36,7 +36,6 @@ resource "google_iam_workload_identity_pool_provider" "aws_provider" {
   workload_identity_pool_id          = local.wip_id
   workload_identity_pool_provider_id = "aws-provider"
   display_name                        = "Vendor AWS provider"
-
   aws {
     account_id = var.vendor_aws_account_id
   }
