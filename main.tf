@@ -1,7 +1,3 @@
-variable "project_id" {}
-variable "vendor_aws_account_id" {}
-variable "vendor_aws_iam_role_name" {}
-
 provider "google" {
   project = var.project_id
 }
