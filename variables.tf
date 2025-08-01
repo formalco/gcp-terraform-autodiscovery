@@ -12,3 +12,4 @@ variable "vendor_aws_iam_role_name" {
   type        = string
   description = "The name of the IAM Role that will impersonate the GCP SA"
 }
+
