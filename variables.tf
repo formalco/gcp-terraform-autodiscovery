@@ -1,5 +1,5 @@
 variable "project_id" {
-  description = "The ID of the GCP project where resources will be created"
+  description = "The GCP project ID"
   type        = string
 }
 
@@ -9,17 +9,11 @@ variable "vendor_aws_account_id" {
 }
 
 variable "vendor_aws_iam_role_name" {
-  description = "The name of the AWS IAM role used for impersonation"
+  description = "The name of the AWS IAM role to federate from"
   type        = string
 }
 
 variable "integration_id" {
-  description = "The unique Formal integration ID for this deployment"
+  description = "Unique ID for the integration"
   type        = string
-}
-
-variable "pool_exists" {
-  description = "Set to false to create the workload identity pool; true to use an existing one"
-  type        = bool
-  default     = true
 }
