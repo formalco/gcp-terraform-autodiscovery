@@ -8,8 +8,9 @@ resource "google_service_account" "vendor_sa" {
 }
 
 resource "google_project_iam_member" "gke_viewer" {
-  role   = "roles/container.viewer"
-  member = "serviceAccount:${google_service_account.vendor_sa.email}"
+  project = var.project_id
+  role    = "roles/container.viewer"
+  member  = "serviceAccount:${google_service_account.vendor_sa.email}"
 }
 
 resource "google_iam_workload_identity_pool" "vendor_pool" {
@@ -19,9 +20,10 @@ resource "google_iam_workload_identity_pool" "vendor_pool" {
 }
 
 resource "google_iam_workload_identity_pool_provider" "aws_provider" {
-  workload_identity_pool_id = google_iam_workload_identity_pool.vendor_pool.workload_identity_pool_id
-  provider_id               = "aws-provider"
-  display_name              = "Vendor AWS provider"
+  project                             = var.project_id
+  workload_identity_pool_id          = google_iam_workload_identity_pool.vendor_pool.workload_identity_pool_id
+  workload_identity_pool_provider_id = "aws-provider"
+  display_name                        = "Vendor AWS provider"
   aws {
     account_id = var.vendor_aws_account_id
   }
