@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-ACCOUNT_ID="${CLOUDSHELL_VAR_account_id:-}"
-ROLE_NAME="${CLOUDSHELL_VAR_role_name:-}"
-PROJECT_ID="${CLOUDSHELL_VAR_project_id:-}"
+ACCOUNT_ID="${CLOUDSHELL_VAR_account_id:-${account_id:-}}"
+ROLE_NAME="${CLOUDSHELL_VAR_role_name:-${role_name:-}}"
+PROJECT_ID="${CLOUDSHELL_VAR_project_id:-${project_id:-}}"
 
 if [[ -z "$ACCOUNT_ID" || -z "$ROLE_NAME" ]]; then
   echo "\n❌ Missing required parameters. Make sure the Cloud Shell link includes account_id and role_name."
