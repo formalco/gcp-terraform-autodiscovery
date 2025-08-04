@@ -6,21 +6,28 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
-# Clean and truncate the integration ID
 locals {
-  cleaned_integration_id = substr("int-${replace(var.integration_id, "_", "-")}", 0, 15)
-  wip_id                 = "vendor-pool-${local.cleaned_integration_id}"
-  sa_id                  = substr("vendor-${replace(var.integration_id, "_", "-")}", 0, 30)
+  # Clean and shorten integration ID for naming resources
+  cleaned_integration_id = substr(replace(var.integration_id, "_", "-"), 0, 20)
+
+  # Workload Identity Pool ID (≤32 chars)
+  wip_id = "vendor-pool-${substr(local.cleaned_integration_id, 0, 15)}"
+
+  # GCP service account ID (≤30 chars, must match regex)
+  sa_id = "vendor-${substr(local.cleaned_integration_id, 0, 23)}"
+
+  # Display name (≤32 chars)
+  pool_display_name = substr("Pool for ${local.cleaned_integration_id}", 0, 32)
 }
 
-# Create a unique Workload Identity Pool per integration
+# Create Workload Identity Pool
 resource "google_iam_workload_identity_pool" "vendor_pool" {
-  project                   = var.project_id
+  project                    = var.project_id
   workload_identity_pool_id = local.wip_id
-  display_name             = "Federation Pool for ${var.integration_id}"
+  display_name              = local.pool_display_name
 }
 
-# Create a Workload Identity Provider for the AWS account
+# Create Workload Identity Provider for AWS
 resource "google_iam_workload_identity_pool_provider" "aws_provider" {
   project                             = var.project_id
   workload_identity_pool_id          = google_iam_workload_identity_pool.vendor_pool.workload_identity_pool_id
@@ -31,13 +38,13 @@ resource "google_iam_workload_identity_pool_provider" "aws_provider" {
   }
 }
 
-# Create a GCP service account per integration
+# Create GCP Service Account
 resource "google_service_account" "vendor_sa" {
   account_id   = local.sa_id
-  display_name = "Vendor SA for IAM role ${var.vendor_aws_iam_role_name}"
+  display_name = "Vendor SA for ${var.integration_id}"
 }
 
-# Allow the AWS IAM role to impersonate the GCP service account
+# Allow AWS IAM role to impersonate GCP SA
 resource "google_service_account_iam_member" "impersonation" {
   service_account_id = google_service_account.vendor_sa.name
   role               = "roles/iam.workloadIdentityUser"
@@ -45,7 +52,7 @@ resource "google_service_account_iam_member" "impersonation" {
   member = "principalSet://iam.googleapis.com/projects/${data.google_project.project.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.vendor_pool.workload_identity_pool_id}/attribute.aws_role/arn:aws:iam::${var.vendor_aws_account_id}:role/${var.vendor_aws_iam_role_name}"
 }
 
-# Grant the GCP SA permissions to read GKE clusters
+# Grant GKE viewer permissions to the GCP SA
 resource "google_project_iam_member" "gke_viewer" {
   project = var.project_id
   role    = "roles/container.viewer"
