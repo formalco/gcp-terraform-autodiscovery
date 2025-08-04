@@ -17,3 +17,8 @@ variable "integration_id" {
   description = "Unique ID for the integration"
   type        = string
 }
+
+variable "notify_endpoint" {
+  description = "The endpoint URL to notify after deployment completion"
+  type        = string
+}
