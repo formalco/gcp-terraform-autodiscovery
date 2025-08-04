@@ -7,17 +7,17 @@ data "google_project" "project" {
 }
 
 locals {
-  # Clean and shorten integration ID for naming resources
-  cleaned_integration_id = substr(replace(var.integration_id, "_", "-"), 0, 20)
+  # Clean integration ID for naming resources
+  cleaned_integration_id = replace(var.integration_id, "_", "-")
 
-  # Workload Identity Pool ID (≤32 chars)
-  wip_id = "vendor-pool-${substr(local.cleaned_integration_id, 0, 15)}"
+  # Workload Identity Pool ID (≤32 chars) - unique per integration
+  wip_id = substr("pool-${local.cleaned_integration_id}", 0, 32)
 
   # GCP service account ID (≤30 chars, must match regex)
-  sa_id = "vendor-${substr(local.cleaned_integration_id, 0, 23)}"
+  sa_id = substr("sa-${local.cleaned_integration_id}", 0, 30)
 
   # Display name (≤32 chars)
-  pool_display_name = substr("Pool for ${local.cleaned_integration_id}", 0, 32)
+  pool_display_name = substr("Integration ${local.cleaned_integration_id}", 0, 32)
 }
 
 # Create Workload Identity Pool
