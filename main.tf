@@ -24,6 +24,48 @@ resource "google_project_service" "iam_api" {
   disable_on_destroy = false
 }
 
+# Enable the Cloud SQL API
+resource "google_project_service" "sql_api" {
+  project = var.project_id
+  service = "sql-component.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Enable the Cloud Spanner API
+resource "google_project_service" "spanner_api" {
+  project = var.project_id
+  service = "spanner.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Enable the Compute Engine API
+resource "google_project_service" "compute_api" {
+  project = var.project_id
+  service = "compute.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Enable the Cloud Run API
+resource "google_project_service" "run_api" {
+  project = var.project_id
+  service = "run.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Enable the BigQuery API
+resource "google_project_service" "bigquery_api" {
+  project = var.project_id
+  service = "bigquery.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Enable the Cloud Storage API
+resource "google_project_service" "storage_api" {
+  project = var.project_id
+  service = "storage-component.googleapis.com"
+  disable_on_destroy = false
+}
+
 locals {
   # Clean integration ID for naming resources
   cleaned_integration_id = replace(var.integration_id, "_", "-")
@@ -88,6 +130,48 @@ resource "google_project_iam_member" "gke_viewer" {
   member  = "serviceAccount:${google_service_account.vendor_sa.email}"
 }
 
+# Grant Cloud SQL viewer permissions
+resource "google_project_iam_member" "cloud_sql_viewer" {
+  project = var.project_id
+  role    = "roles/cloudsql.viewer"
+  member  = "serviceAccount:${google_service_account.vendor_sa.email}"
+}
+
+# Grant Cloud Spanner viewer permissions
+resource "google_project_iam_member" "cloud_spanner_viewer" {
+  project = var.project_id
+  role    = "roles/spanner.viewer"
+  member  = "serviceAccount:${google_service_account.vendor_sa.email}"
+}
+
+# Grant Compute Engine viewer permissions
+resource "google_project_iam_member" "compute_viewer" {
+  project = var.project_id
+  role    = "roles/compute.viewer"
+  member  = "serviceAccount:${google_service_account.vendor_sa.email}"
+}
+
+# Grant Cloud Run viewer permissions
+resource "google_project_iam_member" "cloud_run_viewer" {
+  project = var.project_id
+  role    = "roles/run.viewer"
+  member  = "serviceAccount:${google_service_account.vendor_sa.email}"
+}
+
+# Grant BigQuery viewer permissions
+resource "google_project_iam_member" "bigquery_viewer" {
+  project = var.project_id
+  role    = "roles/bigquery.metadataViewer"
+  member  = "serviceAccount:${google_service_account.vendor_sa.email}"
+}
+
+# Grant Cloud Storage viewer permissions
+resource "google_project_iam_member" "storage_viewer" {
+  project = var.project_id
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${google_service_account.vendor_sa.email}"
+}
+
 
 
 # Notify vendor after deployment
@@ -108,10 +192,22 @@ EOT
   depends_on = [
     google_project_service.iam_api,
     google_project_service.gke_api,
+    google_project_service.sql_api,
+    google_project_service.spanner_api,
+    google_project_service.compute_api,
+    google_project_service.run_api,
+    google_project_service.bigquery_api,
+    google_project_service.storage_api,
     google_iam_workload_identity_pool.vendor_pool,
     google_iam_workload_identity_pool_provider.aws_provider,
     google_service_account.vendor_sa,
     google_service_account_iam_member.impersonation,
-    google_project_iam_member.gke_viewer
+    google_project_iam_member.gke_viewer,
+    google_project_iam_member.cloud_sql_viewer,
+    google_project_iam_member.cloud_spanner_viewer,
+    google_project_iam_member.compute_viewer,
+    google_project_iam_member.cloud_run_viewer,
+    google_project_iam_member.bigquery_viewer,
+    google_project_iam_member.storage_viewer
   ]
 }
