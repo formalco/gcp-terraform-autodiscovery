@@ -6,6 +6,24 @@ data "google_project" "project" {
   project_id = var.project_id
 }
 
+# Enable the Google Kubernetes Engine API
+resource "google_project_service" "gke_api" {
+  project = var.project_id
+  service = "container.googleapis.com"
+
+  # Optional: Disabling the service when the resource is destroyed is often
+  # not desired for core services like GKE. Setting this to false prevents
+  # the API from being disabled if you run 'terraform destroy'.
+  disable_on_destroy = false
+}
+
+# Enable the Identity and Access Management (IAM) API
+resource "google_project_service" "iam_api" {
+  project = var.project_id
+  service = "iam.googleapis.com"
+  disable_on_destroy = false
+}
+
 locals {
   # Clean integration ID for naming resources
   cleaned_integration_id = replace(var.integration_id, "_", "-")
@@ -25,6 +43,8 @@ resource "google_iam_workload_identity_pool" "vendor_pool" {
   project                    = var.project_id
   workload_identity_pool_id = local.wip_id
   display_name              = local.pool_display_name
+  
+  depends_on = [google_project_service.iam_api]
 }
 
  # Create Workload Identity Provider for AWS
@@ -58,7 +78,7 @@ resource "google_service_account_iam_member" "impersonation" {
   service_account_id = google_service_account.vendor_sa.name
   role               = "roles/iam.workloadIdentityUser"
 
-  member = "principalSet://iam.googleapis.com/projects/${data.google_project.project.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.vendor_pool.workload_identity_pool_id}/attribute.aws_role/arn:aws:iam::${var.vendor_aws_account_id}:role/${var.vendor_aws_iam_role_name}"
+  member = "principalSet://iam.googleapis.com/projects/${data.google_project.project.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.vendor_pool.workload_identity_pool_id}/attribute.aws_role/${var.vendor_aws_iam_role_name}"
 }
 
 # Grant GKE viewer permissions to the GCP SA
@@ -75,7 +95,10 @@ resource "null_resource" "notify_vendor" {
   provisioner "local-exec" {
     command = <<EOT
 curl \
-  -d '{"id": "${var.integration_id}"}' \
+  -d '{
+    "id": "${var.integration_id}",
+    "project_id": "${var.project_id}"
+  }' \
   -H "Content-Type: application/json" \
   -H "X-API-Key: APIKEY" \
   '${var.notify_endpoint}/core.v1.IntegrationCloudService/UpdateGCPCloudIntegration'
@@ -83,6 +106,8 @@ EOT
   }
 
   depends_on = [
+    google_project_service.iam_api,
+    google_project_service.gke_api,
     google_iam_workload_identity_pool.vendor_pool,
     google_iam_workload_identity_pool_provider.aws_provider,
     google_service_account.vendor_sa,
