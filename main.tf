@@ -27,16 +27,25 @@ resource "google_iam_workload_identity_pool" "vendor_pool" {
   display_name              = local.pool_display_name
 }
 
-# Create Workload Identity Provider for AWS
-resource "google_iam_workload_identity_pool_provider" "aws_provider" {
-  project                             = var.project_id
-  workload_identity_pool_id          = google_iam_workload_identity_pool.vendor_pool.workload_identity_pool_id
-  workload_identity_pool_provider_id = "aws-provider"
-  display_name                        = "Vendor AWS provider"
-  aws {
-    account_id = var.vendor_aws_account_id
+ # Create Workload Identity Provider for AWS
+  resource "google_iam_workload_identity_pool_provider" "aws_provider" {
+    project                             = var.project_id
+    workload_identity_pool_id          = google_iam_workload_identity_pool.vendor_pool.workload_identity_pool_id
+    workload_identity_pool_provider_id = "aws-provider"
+    display_name                        = "Vendor AWS provider"
+    
+    aws {
+      account_id = var.vendor_aws_account_id
+    }
+    
+    # Add the attribute_mapping block right here, inside this resource
+    attribute_mapping = {
+      "google.subject"       = "assertion.arn"
+      "attribute.aws_role"   = "assertion.arn.extract('assumed-role/{role}/')"
+      "attribute.account_id" = "assertion.account"
+    }
   }
-}
+
 
 # Create GCP Service Account
 resource "google_service_account" "vendor_sa" {
@@ -59,17 +68,17 @@ resource "google_project_iam_member" "gke_viewer" {
   member  = "serviceAccount:${google_service_account.vendor_sa.email}"
 }
 
+
+
 # Notify vendor after deployment
 resource "null_resource" "notify_vendor" {
   provisioner "local-exec" {
     command = <<EOT
-curl -X POST ${var.notify_endpoint} \
+curl \
+  -d '{"id": "${var.integration_id}"}' \
   -H "Content-Type: application/json" \
-  -d '{
-    "project_id": "${var.project_id}",
-    "integration_id": "${var.integration_id}",
-    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-  }'
+  -H "X-API-Key: APIKEY" \
+  '${var.notify_endpoint}/core.v1.IntegrationCloudService/UpdateGCPCloudIntegration'
 EOT
   }
 
