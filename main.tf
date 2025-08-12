@@ -184,7 +184,6 @@ curl \
     "project_id": "${var.project_id}"
   }' \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: APIKEY" \
   '${var.notify_endpoint}/core.v1.IntegrationCloudService/UpdateGCPCloudIntegration'
 EOT
   }
