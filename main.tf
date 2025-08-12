@@ -27,7 +27,7 @@ resource "google_project_service" "iam_api" {
 # Enable the Cloud SQL API
 resource "google_project_service" "sql_api" {
   project = var.project_id
-  service = "sql-component.googleapis.com"
+  service = "sqladmin.googleapis.com"
   disable_on_destroy = false
 }
 
@@ -62,7 +62,7 @@ resource "google_project_service" "bigquery_api" {
 # Enable the Cloud Storage API
 resource "google_project_service" "storage_api" {
   project = var.project_id
-  service = "storage-component.googleapis.com"
+  service = "storage.googleapis.com"
   disable_on_destroy = false
 }
 
@@ -184,6 +184,7 @@ curl \
     "project_id": "${var.project_id}"
   }' \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: APIKEY" \
   '${var.notify_endpoint}/core.v1.IntegrationCloudService/UpdateGCPCloudIntegration'
 EOT
   }
@@ -191,12 +192,6 @@ EOT
   depends_on = [
     google_project_service.iam_api,
     google_project_service.gke_api,
-    google_project_service.sql_api,
-    google_project_service.spanner_api,
-    google_project_service.compute_api,
-    google_project_service.run_api,
-    google_project_service.bigquery_api,
-    google_project_service.storage_api,
     google_iam_workload_identity_pool.vendor_pool,
     google_iam_workload_identity_pool_provider.aws_provider,
     google_service_account.vendor_sa,
