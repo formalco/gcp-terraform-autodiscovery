@@ -39,4 +39,4 @@ terraform apply -auto-approve \
   -var="vendor_aws_iam_role_name=$ROLE_NAME" \
   -var="project_id=$PROJECT_ID" \
   -var="integration_id=$INTEGRATION_ID" \
-  -var="callbackUri=$CALLBACK_URI"
+  -var="callback_uri=$CALLBACK_URI"
