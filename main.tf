@@ -185,7 +185,7 @@ curl \
   }' \
   -H "Content-Type: application/json" \
   -H "X-API-Key: APIKEY" \
-  '${var.notify_endpoint}'
+  '${var.callback_uri}'
 EOT
   }
 

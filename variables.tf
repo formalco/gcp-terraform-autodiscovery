@@ -18,7 +18,7 @@ variable "integration_id" {
   type        = string
 }
 
-variable "notify_endpoint" {
+variable "callback_uri" {
   description = "The endpoint URL to notify after deployment completion"
   type        = string
 }
